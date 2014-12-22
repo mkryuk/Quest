@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,52 +8,45 @@ using System.Text.RegularExpressions;
 
 namespace Quest
 {
+    struct Translator
+    {
+        public string Name { get; set; }
+        public string From { get; set; }
+        public string To { get; set; }
+    }
     class Program
     {
-
+        public static List<Translator> Translators = new List<Translator>();
         static void Main(string[] args)
-        {            
-            var fileStream = new StreamReader("..\\..\\musetalks.data");
-            var langList = new List<List<string>>();
+        {
+            var fileStream = new StreamReader("..\\..\\translators.data");
+            const string from = "Исландский";
+            const string to = "Албанский";
             while (!fileStream.EndOfStream)
             {
-                var readLine = fileStream.ReadLine();
-                if (readLine == null) continue;
-
-                var line = readLine.Split(' ');
-
-                //looking up in all list of languages
-                var found = langList.FindAll((item) =>
-                {       
-                    var result = false;
-
-                    //looking up read muse in existing list
-                    line.ToList().ForEach((muse) =>
-                    {
-                        var index = item.FindIndex((oneOfMuses) => oneOfMuses == muse);
-                        if (index == -1) return;
-                        //add both muses to their language partners
-                        item.AddRange(line);
-                        result = true;
-                    });
-                    return result;
-                });
-
-
-                if (found.Count == 0)
-                {
-                    langList.Add(line.ToList());
-                }
-                //in the case both muses exists in different lines of language list 
-                //combine this lines together and remove remaining
-                else if (found.Count > 1)
-                {
-                    found[0].AddRange(found[1]);
-                    langList.Remove(found[1]);
-                }
+                var translator = fileStream.ReadLine().Split(' ');
+                Translators.Add(new Translator() { Name = translator[0], From = translator[1], To = translator[2] });
             }
+            var result = new List<int>();
+            FindBranches(from, to, 0, ref result);
+            Console.WriteLine("Minimum count of translators is {0}", result.Min());
+        }
 
-            Console.WriteLine(langList.Count);
+        public static void FindBranches(string from, string to, int depth, ref List<int> pathLengthes)
+        {
+            var translators = Translators.FindAll((item) => item.From == from);
+            var currentDepth = ++depth;
+            foreach (var translator in translators)
+            {
+                Console.WriteLine("{0,-20} {1,-20} {2,-20} Depth {3}", translator.Name, translator.From, translator.To, depth);
+                if (translator.To == to)
+                {
+                    pathLengthes.Add(currentDepth);
+                    Console.WriteLine("");
+                    return;
+                }
+                FindBranches(translator.To, to, currentDepth, ref pathLengthes);
+            }
         }
     }
 }
