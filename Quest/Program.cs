@@ -8,45 +8,65 @@ using System.Text.RegularExpressions;
 
 namespace Quest
 {
-    struct Translator
-    {
-        public string Name { get; set; }
-        public string From { get; set; }
-        public string To { get; set; }
-    }
+
+    
+
     class Program
     {
-        public static List<Translator> Translators = new List<Translator>();
-        static void Main(string[] args)
+        public static string ToNBase(int number, int _base, int digitsInTicket)
         {
-            var fileStream = new StreamReader("..\\..\\translators.data");
-            const string from = "Исландский";
-            const string to = "Албанский";
-            while (!fileStream.EndOfStream)
+            var result = "";
+            while (true)
             {
-                var translator = fileStream.ReadLine().Split(' ');
-                Translators.Add(new Translator() { Name = translator[0], From = translator[1], To = translator[2] });
-            }
-            var result = new List<int>();
-            FindBranches(from, to, 0, ref result);
-            Console.WriteLine("Minimum count of translators is {0}", result.Min());
+                result = (number % _base) + result;
+                number /= _base;
+                if (number >= _base) continue;
+                if (number != 0)
+                {
+                    result = number + result;
+                }
+                //adding left zeros
+                result = result.PadLeft(digitsInTicket, '0');
+                break;
+            } 
+            return result;
         }
 
-        public static void FindBranches(string from, string to, int depth, ref List<int> pathLengthes)
+        public static int SumString(string data)
         {
-            var translators = Translators.FindAll((item) => item.From == from);
-            var currentDepth = ++depth;
-            foreach (var translator in translators)
-            {
-                Console.WriteLine("{0,-20} {1,-20} {2,-20} Depth {3}", translator.Name, translator.From, translator.To, depth);
-                if (translator.To == to)
-                {
-                    pathLengthes.Add(currentDepth);
-                    Console.WriteLine("");
-                    return;
-                }
-                FindBranches(translator.To, to, currentDepth, ref pathLengthes);
-            }
+            return data.Sum(t => Convert.ToInt32(t));
         }
+
+        private static bool IsHappy(ref string data)
+        {
+            //there is no happy numbers in number with odd digits count
+            if ((data.Length % 2) != 0)           
+                return false;
+            
+            var left = SumString(data.Substring(0, data.Length/2));
+            var right = SumString(data.Substring(data.Length / 2, data.Length / 2));
+            return left == right;
+        }
+
+        static void Main(string[] args)
+        {
+            var count = 0;
+            var iterator = 0;
+            const int digitsInTicket = 6;
+            const int _base = 9;
+            //find iteration quantity
+            var end = (int)Math.Pow(_base, digitsInTicket);
+            while (iterator != end)
+            {
+                var data = ToNBase(iterator, _base, digitsInTicket);
+                if (IsHappy(ref data))                
+                    count++;
+                
+                iterator++;
+            }
+            Console.WriteLine(count);
+        }
+
+        
     }
 }
