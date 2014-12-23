@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,7 +35,7 @@ namespace Quest
 
         public static int SumString(string data)
         {
-            return data.Sum(t => Convert.ToInt32(t));
+            return data.Sum(t => Int32.Parse(t.ToString(CultureInfo.InvariantCulture)));
         }
 
         private static bool IsHappy(ref string data)
