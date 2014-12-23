@@ -5,71 +5,33 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Quest
 {
-
-
-
     class Program
     {
-        public static string ToNBase(int number, int _base, int digitsInTicket)
-        {
-            var result = "";
-            while (true)
-            {
-                result = (number % _base) + result;
-                number /= _base;
-                if (number >= _base) continue;
-                if (number != 0)
-                {
-                    result = number + result;
-                }
-                //adding left zeros
-                result = result.PadLeft(digitsInTicket, '0');
-                break;
-            }
-            return result;
-        }
-
-        public static int SumString(string data)
-        {
-            return data.Sum(t => Int32.Parse(t.ToString()));
-        }
-
-        private static bool IsCommonHappy(ref string data)
-        {
-            for (var i = 1; i < data.Length; i++)
-            {
-                var left = SumString(data.Substring(0, i));
-                var right = SumString(data.Substring(i, data.Length - i));
-                if (left == right)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         static void Main(string[] args)
         {
-            var count = 0;
-            var iterator = 0;
-            const int digitsInTicket = 8;
-            const int _base = 4;
-            //find iteration quantity
-            var end = (int)Math.Pow(_base, digitsInTicket);
-            while (iterator != end)
-            {
-                var data = ToNBase(iterator, _base, digitsInTicket);
-                if (IsCommonHappy(ref data))
-                    count++;
-
-                iterator++;
-            }
-            Console.WriteLine(count);
+            var fileStream = new StreamReader("..\\..\\lyrics.data");
+            const string myPart = "xyzw";
+            const string starPart = "abcd";
+            //read all song to end (it`s in one string file)
+            var wholeSong = fileStream.ReadLine();
+            //cut all noise like back vocal ets.
+            var songWithoutBack = Regex.Replace(wholeSong, "[^abcdxyzw]", "");
+            //filter all my parties
+            var myParts = Regex.Matches(songWithoutBack, "[^abcd]+");
+            //filter all star parties
+            var starParts = Regex.Matches(songWithoutBack, "[^xyzw]+");
+            //evaluate my longest party
+            var myMaxLength = myParts.Cast<Match>().Select(match=>match.Value).ToList().Max((item)=>item.Length);
+            //evaluate star longest party
+            var starMaxLength = starParts.Cast<Match>().Select(match => match.Value).ToList().Max((item) => item.Length);
+            //calculate in persentage
+            var myResult = myMaxLength * 100 / (myMaxLength + starMaxLength);
+            var starResult = starMaxLength * 100 / (myMaxLength + starMaxLength);
+            Console.WriteLine("my party longest length: {0}% star party longest length: {1}%", myResult, starResult);
         }
-
-
     }
 }
