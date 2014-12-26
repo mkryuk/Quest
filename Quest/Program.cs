@@ -12,40 +12,40 @@ namespace Quest
 
         static void Main(string[] args)
         {
-            var fileStream = new StreamReader("..\\..\\notes.txt");
-            var judges = new Dictionary<string, int>();
-            var fineList = new List<int>();
-            var pointSum = 0;
+            //loading crypted letter
+            var fileStream = new StreamReader("..\\..\\letter.data");            
+            var originalText = new StringBuilder();
+            var originalAlphabet = fileStream.ReadLine();
             while (!fileStream.EndOfStream)
             {
-                var readLine = fileStream.ReadLine();
-                if (readLine == null) continue;
-                var line = readLine.Split(' ');
-                var fine = Int32.Parse(line[0]);
-                var points = Int32.Parse(line[1]);
-                if (fine >= 0)
-                {
-                    var temp = fine;
-                    fine = points;
-                    points = temp;
-                    if (judges.ContainsKey(line[2]))
-                    {
-                        judges[line[2]]++;
-                    }
-                    else
-                    {
-                        judges.Add(line[2], 1);
-                    }
-                }
-                fineList.Add(fine);
-                pointSum += points;
+                originalText.AppendLine(fileStream.ReadLine());
             }
-            Console.WriteLine("average of fine points:{0} points sum:{1} most failed judge:{2}",
-                (int)fineList.Average() * -1,
-                pointSum,
-                judges.Count == 0
-                    ? "nobody failed"
-                    : judges.Aggregate((left, right) => left.Value > right.Value ? left : right).Key);
+            //filter text from punctuation marks
+            var filteredText = Regex.Replace(originalText.ToString(), "[\\W]", "");
+            //group all the letters in array and order them by quantity
+            var sortedChars =  filteredText.GroupBy((_char) => _char).OrderByDescending((item)=>item.Count());
+            /*int inx = 0;
+            foreach (var sortedChar in sortedChars)
+            {
+                Console.WriteLine("{0} {1} {2}",sortedChar.Key,alphabet[inx], sortedChar.Count());
+                inx++;
+            }*/
+            //create crypted alphabet to compare with original one
+            var cryptedAlphabet = sortedChars.ToDictionary((item) => item.Key).Keys.ToArray();
+            for (var i = 0; i < originalText.Length; i++)
+            {
+                var index = Array.IndexOf(cryptedAlphabet, originalText[i]);
+                if (index != -1)
+                {
+                    originalText[i] = originalAlphabet[index];
+                }                
+            }
+            var sw = new StreamWriter("..\\..\\decrypted.txt");
+            //write down decrypted letter
+            sw.Write(originalText);
+            sw.Close();
+            //show it in console
+            Console.WriteLine(originalText);
         }
     }
 }
