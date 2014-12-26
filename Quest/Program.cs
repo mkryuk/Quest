@@ -9,43 +9,54 @@ namespace Quest
 {
     class Program
     {
-
+        private static Stack<int> _stack = new Stack<int>();
+        private static StringBuilder _text = new StringBuilder();
         static void Main(string[] args)
         {
-            //loading crypted letter
-            var fileStream = new StreamReader("..\\..\\letter.data");            
-            var originalText = new StringBuilder();
-            var originalAlphabet = fileStream.ReadLine();
+            //loading file in !# language
+            var fileStream = new StreamReader("..\\..\\song.data");
             while (!fileStream.EndOfStream)
             {
-                originalText.AppendLine(fileStream.ReadLine());
-            }
-            //filter text from punctuation marks
-            var filteredText = Regex.Replace(originalText.ToString(), "[\\W]", "");
-            //group all the letters in array and order them by quantity
-            var sortedChars =  filteredText.GroupBy((_char) => _char).OrderByDescending((item)=>item.Count());
-            /*int inx = 0;
-            foreach (var sortedChar in sortedChars)
+                var letter = fileStream.Read();
+                CalculateLetter(letter, ref _stack);
+            }            
+            fileStream.Close();
+
+            //write down the result
+            var strWriter = new StreamWriter("..\\..\\result.txt");
+            strWriter.Write(_text);
+            strWriter.Close();
+            Console.WriteLine(_text);
+        }
+
+        private static void CalculateLetter(int letter, ref Stack<int> stack)
+        {
+            var symbol = Convert.ToChar(letter);
+            switch (symbol)
             {
-                Console.WriteLine("{0} {1} {2}",sortedChar.Key,alphabet[inx], sortedChar.Count());
-                inx++;
-            }*/
-            //create crypted alphabet to compare with original one
-            var cryptedAlphabet = sortedChars.ToDictionary((item) => item.Key).Keys.ToArray();
-            for (var i = 0; i < originalText.Length; i++)
-            {
-                var index = Array.IndexOf(cryptedAlphabet, originalText[i]);
-                if (index != -1)
-                {
-                    originalText[i] = originalAlphabet[index];
-                }                
+                case 'Z':
+                    stack.Push(0);
+                    break;
+                case '+':
+                case '*':
+                    var first = stack.Pop();
+                    var second = stack.Pop();
+                    var result = symbol == '+' ? first + second : first * second;                    
+                    stack.Push(result);
+                    break;
+                case '!':
+                    //append the letter to the text
+                    //'a' starts from 97 in ASCII
+                    _text.Append(Convert.ToChar(stack.Peek() + 97));
+                    break;
+                case '#':
+                    var top = stack.Pop();
+                    stack.Push(++top);
+                    break;
+                case '~':
+                    _text.Append(" ");
+                    break;
             }
-            var sw = new StreamWriter("..\\..\\decrypted.txt");
-            //write down decrypted letter
-            sw.Write(originalText);
-            sw.Close();
-            //show it in console
-            Console.WriteLine(originalText);
         }
     }
 }
