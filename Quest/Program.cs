@@ -1,50 +1,48 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 
 namespace Quest
 {
-
+   
     class Program
     {
 
         static void Main(string[] args)
         {
-            var fileReader = new StreamReader("..//..//coords.dat");
-            var rc = fileReader.ReadLine().Split(' ');
-            var riverA = new Point(Int32.Parse(rc[0]), Int32.Parse(rc[1]));
-            var riverB = new Point(Int32.Parse(rc[2]), Int32.Parse(rc[3]));
-            var result = new StringBuilder();
+            var fileReader = new StreamReader("..//..//schedule.dat");
+            var quantity = Int32.Parse(fileReader.ReadLine());            
+            var tasks = new List<dynamic>();
             while (!fileReader.EndOfStream)
             {
-                var fc = fileReader.ReadLine().Split(' ');
-                var fanPoint = new Point(Int32.Parse(fc[0]), Int32.Parse(fc[1]));
+                var line = fileReader.ReadLine().Split(' ');                
+                tasks.Add(new {StartFrom = Int32.Parse(line[0]),Duration = Int32.Parse(line[1])});
 
-                //calculate pseudoscalar product of vectors
-                var curFan = (riverB.X - riverA.X) * (fanPoint.Y - riverA.Y) -
-                             (riverB.Y - riverA.Y) * (fanPoint.X - riverA.X);
-
-                //point from the left
-                if (curFan > 0)
-                    result.Append("П");
-
-                //point from the right
-                else if (curFan < 0)
-                    result.Append("И");
-
-                //point on the line
-                else
-                    Console.WriteLine("ERROR");
-
-            }
+            }            
             fileReader.Close();
+            var maxCount = 0;
+            var sameTimeTasks = new List<dynamic>();
+            //from 0 to 24 hour
+            for (var i = 0; i <= 24; i++)
+            {
+                //select all items that recorded in current hour
+                var items = tasks.Where(item => (item.StartFrom <= i) && ((item.StartFrom + item.Duration) >= i));
+                //count them
+                var count = items.Count();                
+                if (maxCount >= count) continue;
+                maxCount = count;
+                sameTimeTasks = items.ToList();
+            }
 
             using (var writer = new StreamWriter("..//..//result.txt"))
             {
-                writer.Write(result);
-            }                     
+                writer.WriteLine("recorded simultaneously: {0}", maxCount);
+                sameTimeTasks.ForEach(writer.WriteLine);
+            }
         }
     }
 }
