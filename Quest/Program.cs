@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Odbc;
+using System.Drawing;
 using System.IO;
-using System.Linq;
+using System.Text;
 
 
 namespace Quest
@@ -13,63 +13,56 @@ namespace Quest
 
         static void Main(string[] args)
         {
-            var fileReader = new StreamReader("..//..//map.dat");
-            var matrix = new List<List<int>>();
+            var fileReader = new StreamReader("..//..//data.dat");
+            var points = new List<List<Point>>();
+            var singerPoint = new Point();
             while (!fileReader.EndOfStream)
             {
-                matrix.Add(fileReader.ReadLine().ToList().ConvertAll(item => Int32.Parse(item.ToString())));
+                var coords = fileReader.ReadLine().Split(' ');
+                switch (coords.Length)
+                {
+                    case 6:
+                        points.Add(new List<Point>()
+                        {
+                            new Point(Int32.Parse(coords[0]), Int32.Parse(coords[1])),
+                            new Point(Int32.Parse(coords[2]), Int32.Parse(coords[3])),
+                            new Point(Int32.Parse(coords[4]), Int32.Parse(coords[5])),
+                        });
+                        break;
+                    case 2:
+                        singerPoint.X = Int32.Parse(coords[0]);
+                        singerPoint.Y = Int32.Parse(coords[1]);
+                        break;
+                }
             }
             fileReader.Close();
 
-            var square = 0;
-            var n = matrix.Count;
-            var m = matrix[0].Count;
-            var d = new int[m];
-            for (var i = 0; i < m; i++) d[i] = -1;
-            var d1 = new int[m];
-            var d2 = new int[m];
-            var st = new Stack<int>();
-
-            int top = 0, left = 0, right = 0, bottom = 0;
-
-            for (var i = 0; i < n; i++)
-            {
-                for (var j = 0; j < m; j++)
-                    if (matrix[i][j] == 1)
-                        d[j] = i;
-
-                while (st.Count != 0) st.Pop();
-                for (var j = 0; j < m; ++j)
-                {
-                    while (st.Count != 0 && d[st.Peek()] <= d[j]) st.Pop();
-                    d1[j] = st.Count == 0 ? -1 : st.Peek();
-                    st.Push(j);
-                }
-                while (st.Count != 0) st.Pop();                
-                for (var j = m - 1; j >= 0; --j)
-                {
-                    while (st.Count != 0 && d[st.Peek()] <= d[j]) st.Pop();
-                    d2[j] = st.Count == 0 ? m : st.Peek();
-                    st.Push(j);
-                }
-                for (var j = 0; j < m; ++j)
-                {
-                    var tempSquare = (i - d[j]) * (d2[j] - d1[j] - 1);
-                    if (tempSquare <= square) continue;
-                    square = tempSquare;
-                    top = d[j] + 1;
-                    bottom = i;
-                    left = d1[j] + 1;
-                    right = d2[j] - 1;
-                }
-
-            }
 
             using (var writer = new StreamWriter("..//..//result.txt"))
             {
-                //correct the result, stage should not touch any building
-                square = ((bottom - 1) - (top)) * ((right - 1) - (left));
-                writer.WriteLine(square);
+                var position = 1;
+                var result = new StringBuilder();
+                points.ForEach(triangle =>
+                {
+                    //pseudoscalar product for all sides of the triangle and singerPoint
+                    var a = (triangle[0].X - singerPoint.X) * (triangle[1].Y - triangle[0].Y) - (triangle[1].X - triangle[0].X) * (triangle[0].Y - singerPoint.Y);
+                    var b = (triangle[1].X - singerPoint.X) * (triangle[2].Y - triangle[1].Y) - (triangle[2].X - triangle[1].X) * (triangle[1].Y - singerPoint.Y);
+                    var c = (triangle[2].X - singerPoint.X) * (triangle[0].Y - triangle[2].Y) - (triangle[0].X - triangle[2].X) * (triangle[2].Y - singerPoint.Y);
+                    
+                    //if singerPoint neither in triangle nor lays on it's side
+                    if (((a >= 0 && b >= 0 && c >= 0) || (a <= 0 && b <= 0 && c <= 0)))
+                    {                        
+                        result.Append(String.Format("{0} ", position));
+                    }
+                    position++;
+                });
+                if (result.Length == 0)
+                {
+                    //if singer didn't fail
+                    result.Append("0");
+                }
+                //trim spaces and write result
+                writer.Write(result.ToString().Trim());
             }
         }
     }
