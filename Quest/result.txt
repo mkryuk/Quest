@@ -1,6 +1,1 @@
-recorded simultaneously: 5
-{ StartFrom = 2, Duration = 13 }
-{ StartFrom = 7, Duration = 6 }
-{ StartFrom = 6, Duration = 6 }
-{ StartFrom = 8, Duration = 7 }
-{ StartFrom = 6, Duration = 13 }
+45
