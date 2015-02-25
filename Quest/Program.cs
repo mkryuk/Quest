@@ -8,34 +8,60 @@ using System.Text;
 
 namespace Quest
 {
-    
+
 
     class Program
     {
 
         static void Main(string[] args)
         {
-            var fileReader = new StreamReader("..//..//names.dat");
-            var names = new Dictionary<string,int>();
+            var fileReader = new StreamReader("..//..//message.dat");
+            var dictionary = new Dictionary<string, Dictionary<string, int>>();
             //read file and load data
-            while (!fileReader.EndOfStream)
-            {
-                var name = fileReader.ReadLine();
-                if (names.ContainsKey(name))
-                    names[name]++;
-                
-                else                
-                    names.Add(name,1);
-            }
+            var words = fileReader.ReadToEnd().Split(' ');
             fileReader.Close();
-            //select all bad singers in alphabet order
-            var result = from name in names where name.Value == names.Max(item=>item.Value) orderby name.Key select name.Key;
+            for (var i = 0; i < words.Length-1; i++)
+            {
+                //create key for inner dictionary of word pairs
+                var key = words[i] +" "+ words[i + 1];
+                //if dictionary contains first word
+                if (dictionary.ContainsKey(words[i]))
+                {
+                    //if that key word contains key (pair of words words[i] and words[i + 1])
+                    if (dictionary[words[i]].ContainsKey(key))
+                    {
+                        //increase that words pair count
+                        dictionary[words[i]][key]++;
+                    }
+                    else
+                    {
+                        //set count of key pair to 1
+                        dictionary[words[i]][key] = 1;
+                    }                      
+                }
+                else
+                {
+                    dictionary.Add(words[i],new Dictionary<string, int>());
+                    dictionary[words[i]][key] = 1;
+                }             
+            }
+
+            var result = new Dictionary<string, int>();            
+            //order dictionary by quantity
+            var orderedDictionary = dictionary.OrderByDescending(item => item.Value.Sum(pair => pair.Value));            
+            foreach (var pairs in orderedDictionary)
+            {
+                var orderedPairs = pairs.Value.OrderByDescending(pair => pair.Value);
+                //magic 15 is how many key pairs in collection
+                if (orderedPairs.First().Value <= 15) continue;
+                var key = orderedPairs.First().Key;
+                var value = orderedPairs.First().Value;
+                result.Add(key, value);
+            }            
 
             using (var writer = new StreamWriter("..//..//result.txt"))
             {
-                var strResult = new StringBuilder();
-                result.ToList().ForEach(item => strResult.Append(String.Format("{0}, ", item)));
-                writer.WriteLine(strResult.ToString().Trim(new []{' ',','}));
+                result.ToList().ForEach(data=>writer.Write(data.Key+" "));
             }
         }
     }
